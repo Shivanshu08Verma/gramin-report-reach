@@ -1,8 +1,9 @@
 import { useState } from "react";
-import { Plus, Camera, MapPin, ArrowLeft } from "lucide-react";
+import { Plus, Camera, MapPin, ArrowLeft, Bell } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import potholeImage from "@/assets/pothole-sample.jpg";
 import streetlightImage from "@/assets/streetlight-sample.jpg";
 
@@ -58,7 +59,18 @@ export const Report = () => {
       {/* Header */}
       <header className="bg-card border-b border-border sticky top-0 z-40">
         <div className="flex items-center justify-between p-4">
-          <h1 className="text-xl font-bold">My Reports</h1>
+          <h1 className="text-xl font-bold">Report Issue</h1>
+          <div className="flex items-center gap-2">
+            <Button variant="ghost" size="icon">
+              <Bell className="w-5 h-5" />
+            </Button>
+            <Avatar className="w-8 h-8">
+              <AvatarImage src="/placeholder.svg" />
+              <AvatarFallback className="bg-primary text-primary-foreground text-sm">
+                JD
+              </AvatarFallback>
+            </Avatar>
+          </div>
         </div>
       </header>
 

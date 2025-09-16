@@ -1,11 +1,17 @@
-import { Edit2, MapPin, Mail, Phone, User, LogOut, Bug, Settings } from "lucide-react";
+import { Edit2, MapPin, Mail, Phone, User, LogOut, Bug, Settings, Trophy } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
+import { useState } from "react";
+import { EditProfileDialog } from "@/components/EditProfileDialog";
+import { LanguageDialog } from "@/components/LanguageDialog";
+import { LeaderboardDialog } from "@/components/LeaderboardDialog";
+import { RedeemDialog } from "@/components/RedeemDialog";
+import { useToast } from "@/hooks/use-toast";
 
 // Mock user data
-const userData = {
+const initialUserData = {
   name: "John Doe",
   email: "john.doe@example.com",
   phone: "+91 98765 43210",
@@ -18,6 +24,41 @@ const userData = {
 };
 
 export const Profile = () => {
+  const [userData, setUserData] = useState(initialUserData);
+  const [editDialog, setEditDialog] = useState<{open: boolean, field: string, value: string}>({
+    open: false,
+    field: '',
+    value: ''
+  });
+  const [languageDialog, setLanguageDialog] = useState(false);
+  const [leaderboardDialog, setLeaderboardDialog] = useState(false);
+  const [redeemDialog, setRedeemDialog] = useState(false);
+  const { toast } = useToast();
+
+  const handleEdit = (field: string, currentValue: string) => {
+    setEditDialog({ open: true, field, value: currentValue });
+  };
+
+  const handleSave = (field: string, newValue: string) => {
+    setUserData(prev => ({
+      ...prev,
+      [field.toLowerCase()]: newValue
+    }));
+  };
+
+  const handleSignOut = () => {
+    toast({
+      title: "Signed Out",
+      description: "You have been successfully signed out.",
+    });
+  };
+
+  const handleReportBug = () => {
+    toast({
+      title: "Bug Report",
+      description: "Thank you for reporting! Our team will look into it.",
+    });
+  };
   return (
     <div className="min-h-screen bg-background">
       {/* Header */}
@@ -61,11 +102,18 @@ export const Profile = () => {
 
         {/* Points & Redeem Buttons */}
         <div className="grid grid-cols-2 gap-3">
-          <Button variant="outline" className="h-16 flex-col gap-2">
+          <Button 
+            variant="outline" 
+            className="h-16 flex-col gap-2"
+            onClick={() => setLeaderboardDialog(true)}
+          >
             <div className="text-lg font-bold text-points">{userData.totalPoints}</div>
             <span className="text-sm">Points</span>
           </Button>
-          <Button className="h-16 flex-col gap-2 civic-gradient">
+          <Button 
+            className="h-16 flex-col gap-2 civic-gradient"
+            onClick={() => setRedeemDialog(true)}
+          >
             <span className="text-lg font-bold">Redeem</span>
             <span className="text-sm opacity-90">Rewards</span>
           </Button>
@@ -89,7 +137,11 @@ export const Profile = () => {
                     <div className="text-sm text-muted-foreground">{value}</div>
                   </div>
                 </div>
-                <Button variant="ghost" size="icon">
+                <Button 
+                  variant="ghost" 
+                  size="icon"
+                  onClick={() => handleEdit(label, value)}
+                >
                   <Edit2 className="w-4 h-4" />
                 </Button>
               </div>
@@ -111,11 +163,21 @@ export const Profile = () => {
 
         {/* Action Buttons */}
         <div className="space-y-3">
-          <Button variant="outline" className="w-full justify-start gap-3" size="lg">
+          <Button 
+            variant="outline" 
+            className="w-full justify-start gap-3" 
+            size="lg"
+            onClick={handleReportBug}
+          >
             <Bug className="w-5 h-5" />
             Report Bug
           </Button>
-          <Button variant="outline" className="w-full justify-start gap-3 text-destructive border-destructive/20 hover:bg-destructive/5" size="lg">
+          <Button 
+            variant="outline" 
+            className="w-full justify-start gap-3 text-destructive border-destructive/20 hover:bg-destructive/5" 
+            size="lg"
+            onClick={handleSignOut}
+          >
             <LogOut className="w-5 h-5" />
             Sign Out
           </Button>
@@ -128,12 +190,41 @@ export const Profile = () => {
             <p className="text-sm text-muted-foreground">
               App available in Hindi, Bengali, Tamil, Telugu, Marathi, Gujarati, Kannada, Malayalam, Punjabi, and English
             </p>
-            <Button variant="outline" size="sm" className="mt-2">
+            <Button 
+              variant="outline" 
+              size="sm" 
+              className="mt-2"
+              onClick={() => setLanguageDialog(true)}
+            >
               Change Language
             </Button>
           </div>
         </Card>
       </div>
+
+      {/* Dialogs */}
+      <EditProfileDialog
+        open={editDialog.open}
+        onOpenChange={(open) => setEditDialog(prev => ({ ...prev, open }))}
+        field={editDialog.field}
+        currentValue={editDialog.value}
+        onSave={(value) => handleSave(editDialog.field, value)}
+      />
+      
+      <LanguageDialog
+        open={languageDialog}
+        onOpenChange={setLanguageDialog}
+      />
+      
+      <LeaderboardDialog
+        open={leaderboardDialog}
+        onOpenChange={setLeaderboardDialog}
+      />
+      
+      <RedeemDialog
+        open={redeemDialog}
+        onOpenChange={setRedeemDialog}
+      />
     </div>
   );
 };

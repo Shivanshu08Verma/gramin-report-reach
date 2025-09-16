@@ -2,6 +2,9 @@ import { Trophy, Star, Gift, Calendar } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { useState } from "react";
+import { LeaderboardDialog } from "@/components/LeaderboardDialog";
+import { RedeemDialog } from "@/components/RedeemDialog";
 
 // Mock rewards data
 const rewardsHistory = [
@@ -62,6 +65,8 @@ const availableRewards = [
 export const Rewards = () => {
   const totalPoints = rewardsHistory.reduce((sum, reward) => sum + reward.points, 0);
   const totalReports = rewardsHistory.length;
+  const [leaderboardDialog, setLeaderboardDialog] = useState(false);
+  const [redeemDialog, setRedeemDialog] = useState(false);
 
   return (
     <div className="min-h-screen bg-background">
@@ -101,11 +106,19 @@ export const Rewards = () => {
 
         {/* Action Buttons */}
         <div className="grid grid-cols-2 gap-3">
-          <Button variant="outline" className="h-16 flex-col gap-2">
+          <Button 
+            variant="outline" 
+            className="h-16 flex-col gap-2"
+            onClick={() => setLeaderboardDialog(true)}
+          >
             <Star className="w-6 h-6 text-points" />
-            <span>My Rewards</span>
+            <span>Leaderboard</span>
           </Button>
-          <Button variant="default" className="h-16 flex-col gap-2 civic-gradient">
+          <Button 
+            variant="default" 
+            className="h-16 flex-col gap-2 civic-gradient"
+            onClick={() => setRedeemDialog(true)}
+          >
             <Gift className="w-6 h-6" />
             <span>Redeem</span>
           </Button>
@@ -177,6 +190,17 @@ export const Rewards = () => {
             </p>
           </div>
         </Card>
+
+        {/* Dialogs */}
+        <LeaderboardDialog
+          open={leaderboardDialog}
+          onOpenChange={setLeaderboardDialog}
+        />
+        
+        <RedeemDialog
+          open={redeemDialog}
+          onOpenChange={setRedeemDialog}
+        />
       </div>
     </div>
   );
