@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { useState } from "react";
-import { LeaderboardDialog } from "@/components/LeaderboardDialog";
+import { PointsDialog } from "@/components/PointsDialog";
 import { RedeemDialog } from "@/components/RedeemDialog";
 
 // Mock rewards data
@@ -65,7 +65,7 @@ const availableRewards = [
 export const Rewards = () => {
   const totalPoints = rewardsHistory.reduce((sum, reward) => sum + reward.points, 0);
   const totalReports = rewardsHistory.length;
-  const [leaderboardDialog, setLeaderboardDialog] = useState(false);
+  const [showPoints, setShowPoints] = useState(false);
   const [redeemDialog, setRedeemDialog] = useState(false);
 
   return (
@@ -109,10 +109,10 @@ export const Rewards = () => {
           <Button 
             variant="outline" 
             className="h-16 flex-col gap-2"
-            onClick={() => setLeaderboardDialog(true)}
+            onClick={() => setShowPoints(true)}
           >
             <Star className="w-6 h-6 text-points" />
-            <span>Leaderboard</span>
+            <span>Points</span>
           </Button>
           <Button 
             variant="default" 
@@ -192,9 +192,9 @@ export const Rewards = () => {
         </Card>
 
         {/* Dialogs */}
-        <LeaderboardDialog
-          open={leaderboardDialog}
-          onOpenChange={setLeaderboardDialog}
+        <PointsDialog
+          open={showPoints}
+          onOpenChange={setShowPoints}
         />
         
         <RedeemDialog

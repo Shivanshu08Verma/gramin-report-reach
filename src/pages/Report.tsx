@@ -4,6 +4,8 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
+import { useToast } from "@/hooks/use-toast";
+import { Camera as CapacitorCamera, CameraResultType, CameraSource } from '@capacitor/camera';
 import potholeImage from "@/assets/pothole-sample.jpg";
 import streetlightImage from "@/assets/streetlight-sample.jpg";
 
@@ -152,6 +154,48 @@ export const Report = () => {
 };
 
 const NewIssueForm = ({ onBack }: { onBack: () => void }) => {
+  const [capturedImage, setCapturedImage] = useState<string | null>(null);
+  const { toast } = useToast();
+
+  const takePicture = async () => {
+    try {
+      const image = await CapacitorCamera.getPhoto({
+        quality: 90,
+        allowEditing: false,
+        resultType: CameraResultType.DataUrl,
+        source: CameraSource.Camera,
+      });
+
+      if (image.dataUrl) {
+        setCapturedImage(image.dataUrl);
+        toast({
+          title: "Photo captured!",
+          description: "Your photo has been added to the report.",
+        });
+      }
+    } catch (error) {
+      // Fallback for web/desktop - show file input
+      const input = document.createElement('input');
+      input.type = 'file';
+      input.accept = 'image/*';
+      input.capture = 'environment';
+      input.onchange = (e) => {
+        const file = (e.target as HTMLInputElement).files?.[0];
+        if (file) {
+          const reader = new FileReader();
+          reader.onload = (e) => {
+            setCapturedImage(e.target?.result as string);
+            toast({
+              title: "Photo selected!",
+              description: "Your photo has been added to the report.",
+            });
+          };
+          reader.readAsDataURL(file);
+        }
+      };
+      input.click();
+    }
+  };
   return (
     <div className="min-h-screen bg-background">
       {/* Header */}
@@ -188,14 +232,38 @@ const NewIssueForm = ({ onBack }: { onBack: () => void }) => {
         {/* Photo Upload */}
         <Card className="p-6 border-2 border-dashed border-muted-foreground/25">
           <div className="text-center space-y-3">
-            <Camera className="w-12 h-12 mx-auto text-muted-foreground" />
-            <div>
-              <h3 className="font-medium">Add Photo</h3>
-              <p className="text-sm text-muted-foreground">Take a photo of the issue</p>
-            </div>
-            <Button className="civic-gradient text-primary-foreground">
-              Open Camera
-            </Button>
+            {capturedImage ? (
+              <div className="space-y-3">
+                <img 
+                  src={capturedImage} 
+                  alt="Captured issue" 
+                  className="w-full h-48 object-cover rounded-lg"
+                />
+                <Button 
+                  variant="outline" 
+                  onClick={takePicture}
+                  className="gap-2"
+                >
+                  <Camera className="w-4 h-4" />
+                  Take Another Photo
+                </Button>
+              </div>
+            ) : (
+              <>
+                <Camera className="w-12 h-12 mx-auto text-muted-foreground" />
+                <div>
+                  <h3 className="font-medium">Add Photo</h3>
+                  <p className="text-sm text-muted-foreground">Take a photo of the issue</p>
+                </div>
+                <Button 
+                  className="civic-gradient text-primary-foreground gap-2"
+                  onClick={takePicture}
+                >
+                  <Camera className="w-4 h-4" />
+                  Open Camera
+                </Button>
+              </>
+            )}
           </div>
         </Card>
 
