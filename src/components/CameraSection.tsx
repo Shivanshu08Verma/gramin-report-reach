@@ -1,0 +1,157 @@
+import { useState } from "react";
+import { ArrowLeft, Camera, RotateCcw, Check } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { useToast } from "@/hooks/use-toast";
+import { Camera as CapacitorCamera, CameraResultType, CameraSource } from '@capacitor/camera';
+
+interface CameraSectionProps {
+  onBack: () => void;
+  onPhotoTaken: (imageUrl: string) => void;
+}
+
+export const CameraSection = ({ onBack, onPhotoTaken }: CameraSectionProps) => {
+  const [capturedImage, setCapturedImage] = useState<string | null>(null);
+  const [isCapturing, setIsCapturing] = useState(false);
+  const { toast } = useToast();
+
+  const takePicture = async () => {
+    setIsCapturing(true);
+    try {
+      const image = await CapacitorCamera.getPhoto({
+        quality: 90,
+        allowEditing: false,
+        resultType: CameraResultType.DataUrl,
+        source: CameraSource.Camera,
+      });
+
+      if (image.dataUrl) {
+        setCapturedImage(image.dataUrl);
+        toast({
+          title: "Photo captured!",
+          description: "Review your photo and confirm to continue.",
+        });
+      }
+    } catch (error) {
+      // Fallback for web/desktop - show file input
+      const input = document.createElement('input');
+      input.type = 'file';
+      input.accept = 'image/*';
+      input.capture = 'environment';
+      input.onchange = (e) => {
+        const file = (e.target as HTMLInputElement).files?.[0];
+        if (file) {
+          const reader = new FileReader();
+          reader.onload = (e) => {
+            const result = e.target?.result as string;
+            setCapturedImage(result);
+            toast({
+              title: "Photo selected!",
+              description: "Review your photo and confirm to continue.",
+            });
+          };
+          reader.readAsDataURL(file);
+        }
+      };
+      input.click();
+    }
+    setIsCapturing(false);
+  };
+
+  const confirmPhoto = () => {
+    if (capturedImage) {
+      onPhotoTaken(capturedImage);
+      onBack();
+    }
+  };
+
+  const retakePhoto = () => {
+    setCapturedImage(null);
+  };
+
+  return (
+    <div className="min-h-screen bg-background">
+      {/* Header */}
+      <header className="bg-card border-b border-border sticky top-0 z-40">
+        <div className="flex items-center gap-3 p-4">
+          <Button variant="ghost" size="icon" onClick={onBack}>
+            <ArrowLeft className="w-5 h-5" />
+          </Button>
+          <h1 className="text-xl font-bold">Take Photo</h1>
+        </div>
+      </header>
+
+      <div className="p-4 space-y-6">
+        {/* Camera Instructions */}
+        <div className="text-center space-y-2">
+          <h2 className="text-lg font-semibold">Capture the Issue</h2>
+          <p className="text-muted-foreground text-sm">
+            Take a clear photo of the problem you want to report
+          </p>
+        </div>
+
+        {/* Camera Preview/Captured Image */}
+        <div className="relative aspect-square rounded-lg overflow-hidden bg-muted border-2 border-dashed border-muted-foreground/25">
+          {capturedImage ? (
+            <img 
+              src={capturedImage} 
+              alt="Captured issue" 
+              className="w-full h-full object-cover"
+            />
+          ) : (
+            <div className="flex items-center justify-center h-full">
+              <div className="text-center space-y-4">
+                <Camera className="w-16 h-16 mx-auto text-muted-foreground" />
+                <p className="text-muted-foreground">
+                  {isCapturing ? "Opening camera..." : "Tap to capture photo"}
+                </p>
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Camera Controls */}
+        <div className="space-y-4">
+          {!capturedImage ? (
+            <Button 
+              className="w-full civic-gradient text-primary-foreground py-4 text-lg"
+              onClick={takePicture}
+              disabled={isCapturing}
+            >
+              <Camera className="w-6 h-6 mr-2" />
+              {isCapturing ? "Opening Camera..." : "Open Camera"}
+            </Button>
+          ) : (
+            <div className="grid grid-cols-2 gap-3">
+              <Button 
+                variant="outline" 
+                onClick={retakePhoto}
+                className="py-4 gap-2"
+              >
+                <RotateCcw className="w-5 h-5" />
+                Retake
+              </Button>
+              <Button 
+                className="civic-gradient text-primary-foreground py-4 gap-2"
+                onClick={confirmPhoto}
+              >
+                <Check className="w-5 h-5" />
+                Use Photo
+              </Button>
+            </div>
+          )}
+        </div>
+
+        {/* Tips */}
+        <div className="bg-muted/30 rounded-lg p-4 space-y-2">
+          <h3 className="font-medium text-sm">Photography Tips:</h3>
+          <ul className="text-sm text-muted-foreground space-y-1">
+            <li>• Ensure good lighting for clear visibility</li>
+            <li>• Get close enough to show the problem clearly</li>
+            <li>• Include surrounding context when helpful</li>
+            <li>• Make sure the issue is the main focus</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  );
+};

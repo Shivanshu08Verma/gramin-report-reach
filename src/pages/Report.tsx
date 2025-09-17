@@ -5,7 +5,7 @@ import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { useToast } from "@/hooks/use-toast";
-import { Camera as CapacitorCamera, CameraResultType, CameraSource } from '@capacitor/camera';
+import { CameraSection } from "@/components/CameraSection";
 import potholeImage from "@/assets/pothole-sample.jpg";
 import streetlightImage from "@/assets/streetlight-sample.jpg";
 
@@ -42,6 +42,7 @@ const pastReports = [
 
 export const Report = () => {
   const [showNewIssue, setShowNewIssue] = useState(false);
+  const [showCamera, setShowCamera] = useState(false);
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -52,8 +53,26 @@ export const Report = () => {
     }
   };
 
+  if (showCamera) {
+    return (
+      <CameraSection 
+        onBack={() => setShowCamera(false)}
+        onPhotoTaken={(imageUrl) => {
+          // This would normally save the image and go back to the form
+          setShowCamera(false);
+          setShowNewIssue(true);
+        }}
+      />
+    );
+  }
+
   if (showNewIssue) {
-    return <NewIssueForm onBack={() => setShowNewIssue(false)} />;
+    return (
+      <NewIssueForm 
+        onBack={() => setShowNewIssue(false)}
+        onOpenCamera={() => setShowCamera(true)}
+      />
+    );
   }
 
   return (
@@ -153,49 +172,12 @@ export const Report = () => {
   );
 };
 
-const NewIssueForm = ({ onBack }: { onBack: () => void }) => {
+const NewIssueForm = ({ onBack, onOpenCamera }: { 
+  onBack: () => void; 
+  onOpenCamera: () => void;
+}) => {
   const [capturedImage, setCapturedImage] = useState<string | null>(null);
   const { toast } = useToast();
-
-  const takePicture = async () => {
-    try {
-      const image = await CapacitorCamera.getPhoto({
-        quality: 90,
-        allowEditing: false,
-        resultType: CameraResultType.DataUrl,
-        source: CameraSource.Camera,
-      });
-
-      if (image.dataUrl) {
-        setCapturedImage(image.dataUrl);
-        toast({
-          title: "Photo captured!",
-          description: "Your photo has been added to the report.",
-        });
-      }
-    } catch (error) {
-      // Fallback for web/desktop - show file input
-      const input = document.createElement('input');
-      input.type = 'file';
-      input.accept = 'image/*';
-      input.capture = 'environment';
-      input.onchange = (e) => {
-        const file = (e.target as HTMLInputElement).files?.[0];
-        if (file) {
-          const reader = new FileReader();
-          reader.onload = (e) => {
-            setCapturedImage(e.target?.result as string);
-            toast({
-              title: "Photo selected!",
-              description: "Your photo has been added to the report.",
-            });
-          };
-          reader.readAsDataURL(file);
-        }
-      };
-      input.click();
-    }
-  };
   return (
     <div className="min-h-screen bg-background">
       {/* Header */}
@@ -241,7 +223,7 @@ const NewIssueForm = ({ onBack }: { onBack: () => void }) => {
                 />
                 <Button 
                   variant="outline" 
-                  onClick={takePicture}
+                  onClick={onOpenCamera}
                   className="gap-2"
                 >
                   <Camera className="w-4 h-4" />
@@ -257,7 +239,7 @@ const NewIssueForm = ({ onBack }: { onBack: () => void }) => {
                 </div>
                 <Button 
                   className="civic-gradient text-primary-foreground gap-2"
-                  onClick={takePicture}
+                  onClick={onOpenCamera}
                 >
                   <Camera className="w-4 h-4" />
                   Open Camera
