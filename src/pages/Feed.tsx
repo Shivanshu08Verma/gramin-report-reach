@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
+import { ReportDetailsDialog } from "@/components/ReportDetailsDialog";
 import potholeImage from "@/assets/pothole-sample.jpg";
 import streetlightImage from "@/assets/streetlight-sample.jpg";
 
@@ -46,6 +47,8 @@ const communityReports = [
 
 export const Feed = () => {
   const [filter, setFilter] = useState("all");
+  const [selectedReport, setSelectedReport] = useState<typeof communityReports[0] | null>(null);
+  const [showReportDetails, setShowReportDetails] = useState(false);
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -153,7 +156,14 @@ export const Feed = () => {
                     <Eye className="w-4 h-4" />
                     <span>{report.views}</span>
                   </div>
-                  <Button variant="default" size="sm">
+                  <Button 
+                    variant="default" 
+                    size="sm"
+                    onClick={() => {
+                      setSelectedReport(report);
+                      setShowReportDetails(true);
+                    }}
+                  >
                     View Details
                   </Button>
                 </div>
@@ -162,6 +172,12 @@ export const Feed = () => {
           ))}
         </div>
       </div>
+
+      <ReportDetailsDialog
+        open={showReportDetails}
+        onOpenChange={setShowReportDetails}
+        report={selectedReport}
+      />
     </div>
   );
 };
