@@ -57,8 +57,9 @@ export const Report = () => {
     return (
       <CameraSection 
         onBack={() => setShowCamera(false)}
-        onPhotoTaken={(imageUrl) => {
-          // This would normally save the image and go back to the form
+        onPhotoTaken={(imageUrl, location) => {
+          // This would normally save the image and location data
+          console.log('Photo taken with location:', location);
           setShowCamera(false);
           setShowNewIssue(true);
         }}

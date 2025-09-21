@@ -1,18 +1,72 @@
-import { useState } from "react";
-import { ArrowLeft, Camera, RotateCcw, Check } from "lucide-react";
+import { useState, useEffect } from "react";
+import { ArrowLeft, Camera, RotateCcw, Check, MapPin } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { Camera as CapacitorCamera, CameraResultType, CameraSource } from '@capacitor/camera';
 
 interface CameraSectionProps {
   onBack: () => void;
-  onPhotoTaken: (imageUrl: string) => void;
+  onPhotoTaken: (imageUrl: string, location?: { latitude: number; longitude: number; address?: string }) => void;
 }
 
 export const CameraSection = ({ onBack, onPhotoTaken }: CameraSectionProps) => {
   const [capturedImage, setCapturedImage] = useState<string | null>(null);
   const [isCapturing, setIsCapturing] = useState(false);
+  const [location, setLocation] = useState<{ latitude: number; longitude: number; address?: string } | null>(null);
+  const [isLoadingLocation, setIsLoadingLocation] = useState(false);
   const { toast } = useToast();
+
+  // Get user's location when component mounts
+  useEffect(() => {
+    getCurrentLocation();
+  }, []);
+
+  const getCurrentLocation = async () => {
+    setIsLoadingLocation(true);
+    try {
+      if ('geolocation' in navigator) {
+        navigator.geolocation.getCurrentPosition(
+          async (position) => {
+            const { latitude, longitude } = position.coords;
+            
+            // Reverse geocoding to get address
+            try {
+              const response = await fetch(
+                `https://api.opencagedata.com/geocode/v1/json?q=${latitude}+${longitude}&key=demo&limit=1`
+              );
+              const data = await response.json();
+              const address = data.results?.[0]?.formatted || `${latitude.toFixed(4)}, ${longitude.toFixed(4)}`;
+              
+              setLocation({ latitude, longitude, address });
+            } catch (error) {
+              setLocation({ latitude, longitude, address: `${latitude.toFixed(4)}, ${longitude.toFixed(4)}` });
+            }
+            setIsLoadingLocation(false);
+          },
+          (error) => {
+            console.error('Error getting location:', error);
+            toast({
+              title: "Location access denied",
+              description: "Location will not be included in the report.",
+              variant: "destructive",
+            });
+            setIsLoadingLocation(false);
+          },
+          { enableHighAccuracy: true, timeout: 10000, maximumAge: 300000 }
+        );
+      } else {
+        toast({
+          title: "Location not supported",
+          description: "Your device doesn't support location services.",
+          variant: "destructive",
+        });
+        setIsLoadingLocation(false);
+      }
+    } catch (error) {
+      console.error('Location error:', error);
+      setIsLoadingLocation(false);
+    }
+  };
 
   const takePicture = async () => {
     setIsCapturing(true);
@@ -59,7 +113,7 @@ export const CameraSection = ({ onBack, onPhotoTaken }: CameraSectionProps) => {
 
   const confirmPhoto = () => {
     if (capturedImage) {
-      onPhotoTaken(capturedImage);
+      onPhotoTaken(capturedImage, location || undefined);
       onBack();
     }
   };
@@ -138,6 +192,21 @@ export const CameraSection = ({ onBack, onPhotoTaken }: CameraSectionProps) => {
                 Use Photo
               </Button>
             </div>
+          )}
+        </div>
+
+        {/* Location Info */}
+        <div className="bg-muted/30 rounded-lg p-4 space-y-2">
+          <div className="flex items-center gap-2">
+            <MapPin className="w-4 h-4 text-primary" />
+            <h3 className="font-medium text-sm">Location</h3>
+          </div>
+          {isLoadingLocation ? (
+            <p className="text-sm text-muted-foreground">Getting location...</p>
+          ) : location ? (
+            <p className="text-sm text-muted-foreground">{location.address}</p>
+          ) : (
+            <p className="text-sm text-muted-foreground">Location not available</p>
           )}
         </div>
 
