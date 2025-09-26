@@ -29,18 +29,49 @@ export const CameraSection = ({ onBack, onPhotoTaken }: CameraSectionProps) => {
           async (position) => {
             const { latitude, longitude } = position.coords;
             
-            // Reverse geocoding to get address
+            // Use a free geocoding service
+            let address = `${latitude.toFixed(4)}, ${longitude.toFixed(4)}`;
+            
             try {
+              // Try Nominatim (OpenStreetMap) free service
               const response = await fetch(
-                `https://api.opencagedata.com/geocode/v1/json?q=${latitude}+${longitude}&key=demo&limit=1`
+                `https://nominatim.openstreetmap.org/reverse?lat=${latitude}&lon=${longitude}&format=json&addressdetails=1`
               );
-              const data = await response.json();
-              const address = data.results?.[0]?.formatted || `${latitude.toFixed(4)}, ${longitude.toFixed(4)}`;
               
-              setLocation({ latitude, longitude, address });
+              if (response.ok) {
+                const data = await response.json();
+                const addressComponents = data.address || {};
+                
+                // Extract city and state/region
+                const city = addressComponents.city || 
+                            addressComponents.town || 
+                            addressComponents.village || 
+                            addressComponents.suburb ||
+                            addressComponents.neighbourhood;
+                            
+                const state = addressComponents.state || 
+                             addressComponents.province || 
+                             addressComponents.region;
+                
+                if (city && state) {
+                  address = `${city}, ${state}`;
+                } else if (city) {
+                  address = city;
+                } else if (data.display_name) {
+                  // Fallback to formatted address, try to extract place, state
+                  const parts = data.display_name.split(',').map(p => p.trim());
+                  if (parts.length >= 2) {
+                    address = `${parts[0]}, ${parts[parts.length - 2]}`;
+                  } else {
+                    address = parts[0] || address;
+                  }
+                }
+              }
             } catch (error) {
-              setLocation({ latitude, longitude, address: `${latitude.toFixed(4)}, ${longitude.toFixed(4)}` });
+              console.log('Geocoding failed, using coordinates');
             }
+            
+            setLocation({ latitude, longitude, address });
             setIsLoadingLocation(false);
           },
           (error) => {

@@ -43,6 +43,8 @@ const pastReports = [
 export const Report = () => {
   const [showNewIssue, setShowNewIssue] = useState(false);
   const [showCamera, setShowCamera] = useState(false);
+  const [capturedImage, setCapturedImage] = useState<string | null>(null);
+  const [capturedLocation, setCapturedLocation] = useState<{ latitude: number; longitude: number; address?: string } | null>(null);
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -58,8 +60,8 @@ export const Report = () => {
       <CameraSection 
         onBack={() => setShowCamera(false)}
         onPhotoTaken={(imageUrl, location) => {
-          // This would normally save the image and location data
-          console.log('Photo taken with location:', location);
+          setCapturedImage(imageUrl);
+          setCapturedLocation(location || null);
           setShowCamera(false);
           setShowNewIssue(true);
         }}
@@ -72,6 +74,8 @@ export const Report = () => {
       <NewIssueForm 
         onBack={() => setShowNewIssue(false)}
         onOpenCamera={() => setShowCamera(true)}
+        capturedImage={capturedImage}
+        capturedLocation={capturedLocation}
       />
     );
   }
@@ -173,11 +177,12 @@ export const Report = () => {
   );
 };
 
-const NewIssueForm = ({ onBack, onOpenCamera }: { 
+const NewIssueForm = ({ onBack, onOpenCamera, capturedImage, capturedLocation }: { 
   onBack: () => void; 
   onOpenCamera: () => void;
+  capturedImage?: string | null;
+  capturedLocation?: { latitude: number; longitude: number; address?: string } | null;
 }) => {
-  const [capturedImage, setCapturedImage] = useState<string | null>(null);
   const { toast } = useToast();
   return (
     <div className="min-h-screen bg-background">
@@ -256,7 +261,9 @@ const NewIssueForm = ({ onBack, onOpenCamera }: {
             <MapPin className="w-5 h-5 text-primary" />
             <div className="flex-1">
               <h3 className="font-medium">Location</h3>
-              <p className="text-sm text-muted-foreground">Current location will be used</p>
+              <p className="text-sm text-muted-foreground">
+                {capturedLocation?.address || "Current location will be used"}
+              </p>
             </div>
             <Button variant="outline" size="sm">Change</Button>
           </div>
