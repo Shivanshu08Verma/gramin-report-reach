@@ -100,16 +100,12 @@ export const Profile = () => {
           </Card>
         </div>
 
-        {/* Points & Redeem Buttons */}
+        {/* Points Display & Redeem Button */}
         <div className="grid grid-cols-2 gap-3">
-          <Button 
-            variant="outline" 
-            className="h-16 flex-col gap-2"
-            onClick={() => setLeaderboardDialog(true)}
-          >
-            <div className="text-lg font-bold text-points">{userData.totalPoints}</div>
-            <span className="text-sm">Points</span>
-          </Button>
+          <Card className="p-4 text-center bg-points/5 border-points/20">
+            <div className="text-2xl font-bold text-points">{userData.totalPoints}</div>
+            <div className="text-sm text-muted-foreground">Total Points</div>
+          </Card>
           <Button 
             className="h-16 flex-col gap-2 civic-gradient"
             onClick={() => setRedeemDialog(true)}
